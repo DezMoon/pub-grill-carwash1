@@ -1,20 +1,21 @@
 // server/routes/reservations.js
 
 const express = require("express");
-const { body, validationResult } = require("express-validator");
 const router = express.Router();
+const { body, validationResult } = require("express-validator");
 const {
   getAllReservations,
   createReservation,
   updateReservation,
   deleteReservation,
 } = require("../controllers/reservations");
+const { authenticateUser } = require("../middleware/auth");
 const Reservation = require("../models/Reservation");
 
-// Get all reservations
-router.get("/", getAllReservations);
+// Get all reservations (Admin)
+router.get("/", authenticateUser, getAllReservations);
 
-// Create a new reservation
+// Create a new reservation (User)
 router.post(
   "/",
   [
@@ -26,26 +27,20 @@ router.post(
   createReservation
 );
 
-// Update a reservation
+// Update a reservation (Admin)
 router.put(
   "/:id",
+  authenticateUser,
   [
-    body("name").optional().notEmpty().withMessage("Name is required"),
-    body("email").optional().isEmail().withMessage("Invalid email"),
-    body("phone")
-      .optional()
-      .isMobilePhone()
-      .withMessage("Invalid phone number"),
-    body("date")
-      .optional()
-      .isISO8601()
-      .toDate()
-      .withMessage("Invalid date format"),
+    body("name").notEmpty().withMessage("Name is required"),
+    body("email").isEmail().withMessage("Invalid email"),
+    body("phone").isMobilePhone().withMessage("Invalid phone number"),
+    body("date").isISO8601().toDate().withMessage("Invalid date format"),
   ],
   updateReservation
 );
 
-// Delete a reservation
-router.delete("/:id", deleteReservation);
+// Delete a reservation (Admin)
+router.delete("/:id", authenticateUser, deleteReservation);
 
 module.exports = router;

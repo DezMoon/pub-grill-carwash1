@@ -1,22 +1,26 @@
 // server/routes/menu.js
 
 const express = require("express");
-const { body, validationResult } = require("express-validator");
 const router = express.Router();
+const { body, validationResult } = require("express-validator");
 const {
   getAllMenuItems,
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
 } = require("../controllers/menu");
+const { authenticateUser } = require("../middleware/auth");
+const upload = require("../middleware/upload");
 const MenuItem = require("../models/MenuItem");
 
-// Get all menu items
-router.get("/", getAllMenuItems);
+// Get all menu items (Admin)
+router.get("/", authenticateUser, getAllMenuItems);
 
-// Create a new menu item
+// Create a new menu item (Admin)
 router.post(
   "/",
+  authenticateUser,
+  upload.single("image"),
   [
     body("name").notEmpty().withMessage("Name is required"),
     body("description").notEmpty().withMessage("Description is required"),
@@ -25,9 +29,11 @@ router.post(
   createMenuItem
 );
 
-// Update a menu item
+// Update a menu item (Admin)
 router.put(
   "/:id",
+  authenticateUser,
+  upload.single("image"),
   [
     body("name").optional().notEmpty().withMessage("Name is required"),
     body("description")
@@ -39,7 +45,7 @@ router.put(
   updateMenuItem
 );
 
-// Delete a menu item
-router.delete("/:id", deleteMenuItem);
+// Delete a menu item (Admin)
+router.delete("/:id", authenticateUser, deleteMenuItem);
 
 module.exports = router;

@@ -1,9 +1,9 @@
 // server/controllers/reservations.js
 
-const Reservation = require("../models/Reservation");
 const { validationResult } = require("express-validator");
+const Reservation = require("../models/Reservation");
 
-// Controller function to get all reservations
+// Get all reservations (Admin)
 exports.getAllReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find();
@@ -14,7 +14,7 @@ exports.getAllReservations = async (req, res) => {
   }
 };
 
-// Controller function to create a new reservation
+// Create a new reservation (User)
 exports.createReservation = async (req, res) => {
   // Check for validation errors
   const errors = validationResult(req);
@@ -23,7 +23,8 @@ exports.createReservation = async (req, res) => {
   }
 
   try {
-    const reservation = new Reservation(req.body);
+    const { name, email, phone, date } = req.body;
+    const reservation = new Reservation({ name, email, phone, date });
     await reservation.save();
     res.status(201).json(reservation);
   } catch (err) {
@@ -32,13 +33,20 @@ exports.createReservation = async (req, res) => {
   }
 };
 
-// Controller function to update a reservation
+// Update a reservation (Admin)
 exports.updateReservation = async (req, res) => {
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { id } = req.params;
+    const { name, email, phone, date } = req.body;
     const updatedReservation = await Reservation.findByIdAndUpdate(
       id,
-      req.body,
+      { name, email, phone, date },
       { new: true }
     );
     if (!updatedReservation) {
@@ -47,11 +55,11 @@ exports.updateReservation = async (req, res) => {
     res.json(updatedReservation);
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
-// Controller function to delete a reservation
+// Delete a reservation (Admin)
 exports.deleteReservation = async (req, res) => {
   try {
     const { id } = req.params;
@@ -62,6 +70,6 @@ exports.deleteReservation = async (req, res) => {
     res.json(deletedReservation);
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
+    res.status(500).json({ message: "Server Error" });
   }
 };

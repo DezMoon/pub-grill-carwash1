@@ -1,20 +1,21 @@
 // server/routes/appointments.js
 
 const express = require("express");
-const { body, validationResult } = require("express-validator");
 const router = express.Router();
+const { body, validationResult } = require("express-validator");
 const {
   getAllAppointments,
   createAppointment,
   updateAppointment,
   deleteAppointment,
 } = require("../controllers/appointments");
+const { authenticateUser } = require("../middleware/auth");
 const Appointment = require("../models/Appointment");
 
-// Get all appointments
-router.get("/", getAllAppointments);
+// Get all appointments (Admin)
+router.get("/", authenticateUser, getAllAppointments);
 
-// Create a new appointment
+// Create a new appointment (User)
 router.post(
   "/",
   [
@@ -26,26 +27,20 @@ router.post(
   createAppointment
 );
 
-// Update an appointment
+// Update an appointment (Admin)
 router.put(
   "/:id",
+  authenticateUser,
   [
-    body("name").optional().notEmpty().withMessage("Name is required"),
-    body("carModel").optional().notEmpty().withMessage("Car model is required"),
-    body("serviceType")
-      .optional()
-      .notEmpty()
-      .withMessage("Service type is required"),
-    body("date")
-      .optional()
-      .isISO8601()
-      .toDate()
-      .withMessage("Invalid date format"),
+    body("name").notEmpty().withMessage("Name is required"),
+    body("carModel").notEmpty().withMessage("Car model is required"),
+    body("serviceType").notEmpty().withMessage("Service type is required"),
+    body("date").isISO8601().toDate().withMessage("Invalid date format"),
   ],
   updateAppointment
 );
 
-// Delete an appointment
-router.delete("/:id", deleteAppointment);
+// Delete an appointment (Admin)
+router.delete("/:id", authenticateUser, deleteAppointment);
 
 module.exports = router;

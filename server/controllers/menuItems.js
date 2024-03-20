@@ -1,9 +1,10 @@
-// server/controllers/menuItems.js
+// server/controllers/menu.js
 
+const { validationResult } = require("express-validator");
 const MenuItem = require("../models/MenuItem");
 
-// Controller function to get all menuItems
-exports.getAllReservations = async (req, res) => {
+// Get all menu items (Admin)
+exports.getAllMenuItems = async (req, res) => {
   try {
     const menuItems = await MenuItem.find();
     res.json(menuItems);
@@ -13,46 +14,69 @@ exports.getAllReservations = async (req, res) => {
   }
 };
 
-// Controller function to create a new menuItem
-exports.createReservation = async (req, res) => {
+// Create a new menu item (Admin)
+exports.createMenuItem = async (req, res) => {
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    const menuItem = new MenuItem(req.body);
+    const { name, description, price } = req.body;
+    const imagePath = req.file ? req.file.path : null;
+    const menuItem = new MenuItem({
+      name,
+      description,
+      price,
+      image: imagePath,
+    });
     await menuItem.save();
     res.status(201).json(menuItem);
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
-// Controller function to update a menuItem
+// Update a menu item (Admin)
 exports.updateMenuItem = async (req, res) => {
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { id } = req.params;
-    const updatedMenuItem = await MenuItem.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+    const { name, description, price } = req.body;
+    const imagePath = req.file ? req.file.path : null;
+    const updatedMenuItem = await MenuItem.findByIdAndUpdate(
+      id,
+      { name, description, price, image: imagePath },
+      { new: true }
+    );
     if (!updatedMenuItem) {
-      return res.status(404).json({ message: "MenuItem not found" });
+      return res.status(404).json({ message: "Menu item not found" });
     }
     res.json(updatedMenuItem);
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
-// Controller function to delete a menuItem
+// Delete a menu item (Admin)
 exports.deleteMenuItem = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedMenuItem = await MenuItem.findByIdAndDelete(id);
     if (!deletedMenuItem) {
-      return res.status(404).json({ message: "MenuItem not found" });
+      return res.status(404).json({ message: "Menu item not found" });
     }
     res.json(deletedMenuItem);
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
