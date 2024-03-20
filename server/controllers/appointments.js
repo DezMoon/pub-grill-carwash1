@@ -15,13 +15,18 @@ exports.getAllAppointments = async (req, res) => {
 
 // Controller function to create a new appointment
 exports.createAppointment = async (req, res) => {
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const appointment = new Appointment(req.body);
     await appointment.save();
     res.status(201).json(appointment);
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 

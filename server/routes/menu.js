@@ -1,62 +1,45 @@
-// server/routes/menuItems.js
+// server/routes/menu.js
 
 const express = require("express");
+const { body, validationResult } = require("express-validator");
 const router = express.Router();
+const {
+  getAllMenuItems,
+  createMenuItem,
+  updateMenuItem,
+  deleteMenuItem,
+} = require("../controllers/menu");
 const MenuItem = require("../models/MenuItem");
 
-// Get all menuItems
-router.get("/", async (req, res) => {
-  try {
-    const menuItems = await MenuItem.find();
-    res.json(menuItems);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server Error" });
-  }
-});
+// Get all menu items
+router.get("/", getAllMenuItems);
 
-// Create a new menuItem
-router.post("/", async (req, res) => {
-  try {
-    const menuItem = new MenuItem(req.body);
-    await menuItem.save();
-    res.status(201).json(menuItem);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
-  }
-});
+// Create a new menu item
+router.post(
+  "/",
+  [
+    body("name").notEmpty().withMessage("Name is required"),
+    body("description").notEmpty().withMessage("Description is required"),
+    body("price").isNumeric().withMessage("Invalid price"),
+  ],
+  createMenuItem
+);
 
-// Update a menuItem
-router.put("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updatedMenuItem = await MenuItem.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-    if (!updatedMenuItem) {
-      return res.status(404).json({ message: "MenuItem not found" });
-    }
-    res.json(updatedMenuItem);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
-  }
-});
+// Update a menu item
+router.put(
+  "/:id",
+  [
+    body("name").optional().notEmpty().withMessage("Name is required"),
+    body("description")
+      .optional()
+      .notEmpty()
+      .withMessage("Description is required"),
+    body("price").optional().isNumeric().withMessage("Invalid price"),
+  ],
+  updateMenuItem
+);
 
-// Delete a menuItem
-router.delete("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deletedMenuItem = await MenuItem.findByIdAndDelete(id);
-    if (!deletedMenuItem) {
-      return res.status(404).json({ message: "MenuItem not found" });
-    }
-    res.json(deletedMenuItem);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: "Invalid Request" });
-  }
-});
+// Delete a menu item
+router.delete("/:id", deleteMenuItem);
 
 module.exports = router;
